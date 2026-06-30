@@ -1,0 +1,68 @@
+.login-page {
+    min-height: 100vh;
+    background:
+        linear-gradient(135deg, rgba(37, 99, 235, .08), rgba(5, 150, 105, .14)),
+        #f7fafc;
+}
+
+.auth-shell {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 1.25rem;
+}
+
+.auth-panel {
+    background: #ffffff;
+    border: 1px solid #d8dee9;
+    border-radius: 8px;
+    box-shadow: 0 20px 55px rgba(23, 32, 51, .12);
+    max-width: 460px;
+    padding: clamp(1.5rem, 5vw, 2.25rem);
+    width: 100%;
+}
+
+.brand-mark {
+    align-items: center;
+    background: #e8f1ff;
+    border-radius: 8px;
+    color: #2563eb;
+    display: inline-flex;
+    font-size: 2rem;
+    height: 56px;
+    justify-content: center;
+    margin-bottom: 1rem;
+    width: 56px;
+}
+
+.auth-panel h1 {
+    color: #172033;
+    font-size: clamp(1.8rem, 8vw, 2.4rem);
+    font-weight: 800;
+    letter-spacing: 0;
+    margin-bottom: .35rem;
+}
+
+.tagline {
+    color: #667085;
+    margin-bottom: 1.5rem;
+}
+
+.auth-link {
+    color: #2563eb;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.auth-link:focus,
+.auth-link:hover {
+    color: #1746a2;
+    text-decoration: underline;
+}
+
+.auth-footer {
+    color: #667085;
+    margin: 1rem 0 0;
+    text-align: center;
+}

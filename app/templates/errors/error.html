@@ -1,0 +1,13 @@
+{% extends "layout.html" %}
+
+{% block auth_content %}
+<div class="error-page d-flex flex-column align-items-center justify-content-center text-center" style="min-height:100vh; padding:2rem;">
+    <div class="display-1 fw-bold" style="color: var(--qb-primary, #2563eb);">{{ code }}</div>
+    <h2 class="mb-2">{{ title }}</h2>
+    <p class="text-muted mb-4">{{ message }}</p>
+    <a href="{{ url_for('dashboard.index') if current_user.is_authenticated else url_for('auth.login') }}" class="btn btn-primary">
+        <i class="bi bi-house-door"></i>
+        <span>Back to safety</span>
+    </a>
+</div>
+{% endblock %}

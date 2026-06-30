@@ -1,0 +1,138 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<section class="module-toolbar">
+    <div>
+        <p class="eyebrow">Inventory Management</p>
+        <h2>Product List</h2>
+    </div>
+    <a href="{{ url_for('inventory.add_product') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i>
+        <span>Add Product</span>
+    </a>
+</section>
+
+<section class="panel inventory-panel">
+    <form method="get" class="inventory-filters">
+        <div class="search-box">
+            <i class="bi bi-search"></i>
+            <input type="search" name="q" value="{{ search }}" class="form-control" placeholder="Search name, barcode, supplier">
+        </div>
+        <select name="category" class="form-select">
+            <option value="">All categories</option>
+            {% for category in categories %}
+                <option value="{{ category }}" {% if selected_category == category %}selected{% endif %}>{{ category }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-outline-primary">
+            <i class="bi bi-funnel"></i>
+            <span>Filter</span>
+        </button>
+        {% if search or selected_category %}
+            <a href="{{ url_for('inventory.index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-x-lg"></i>
+                <span>Clear</span>
+            </a>
+        {% endif %}
+    </form>
+
+    <div class="table-responsive">
+        <table class="table inventory-table align-middle">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Barcode</th>
+                    <th>Category</th>
+                    <th class="text-end">Qty</th>
+                    <th class="text-end">Buying</th>
+                    <th class="text-end">Selling</th>
+                    <th class="text-end">Profit</th>
+                    <th>Expiry</th>
+                    <th>Supplier</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if products %}
+                    {% for product in products %}
+                        <tr>
+                            <td>
+                                <div class="product-cell">
+                                    {% if product.image_filename %}
+                                        <img src="{{ url_for('static', filename='img/products/' ~ product.image_filename) }}" alt="{{ product.name }}" class="product-thumb">
+                                    {% else %}
+                                        <span class="product-avatar">{{ product.name[:1]|upper }}</span>
+                                    {% endif %}
+                                    <div>
+                                        <strong>{{ product.name }}</strong>
+                                        <span class="stock-status {{ 'danger' if product.quantity <= 0 else 'warning' if product.quantity <= product.low_stock_threshold else 'success' }}">
+                                            {{ product.stock_status }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ product.barcode or "-" }}</td>
+                            <td>{{ product.category }}</td>
+                            <td class="text-end">{{ product.quantity }}</td>
+                            <td class="text-end">₹{{ "%.2f"|format(product.buying_price) }}</td>
+                            <td class="text-end">₹{{ "%.2f"|format(product.selling_price) }}</td>
+                            <td class="text-end">
+                                <span class="profit-pill {{ 'loss' if product.profit < 0 else '' }}">
+                                    ₹{{ "%.2f"|format(product.profit) }}
+                                </span>
+                            </td>
+                            <td>{{ product.expiry_date.strftime("%d %b %Y") if product.expiry_date else "-" }}</td>
+                            <td>{{ product.supplier or "-" }}</td>
+                            <td class="text-end">
+                                <div class="table-actions">
+                                    <a href="{{ url_for('inventory.edit_product', product_id=product.id) }}" class="btn btn-sm btn-outline-primary" title="Edit product">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                    <form method="post" action="{{ url_for('inventory.delete_product', product_id=product.id) }}" onsubmit="return confirm('Delete this product?');">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete product">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="10">
+                            <div class="empty-table">
+                                <i class="bi bi-box-seam"></i>
+                                <strong>No products found</strong>
+                                <span>Add your first product or adjust the current filters.</span>
+                            </div>
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if pagination.pages > 1 %}
+        <nav class="pagination-wrap" aria-label="Inventory pagination">
+            <ul class="pagination mb-0">
+                <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('inventory.index', page=pagination.prev_num, q=search, category=selected_category) if pagination.has_prev else '#' }}">Previous</a>
+                </li>
+                {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                    {% if page_num %}
+                        <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                            <a class="page-link" href="{{ url_for('inventory.index', page=page_num, q=search, category=selected_category) }}">{{ page_num }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                {% endfor %}
+                <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('inventory.index', page=pagination.next_num, q=search, category=selected_category) if pagination.has_next else '#' }}">Next</a>
+                </li>
+            </ul>
+        </nav>
+    {% endif %}
+</section>
+{% endblock %}

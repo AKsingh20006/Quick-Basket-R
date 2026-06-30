@@ -1,0 +1,78 @@
+<section class="panel product-form-panel">
+    <form method="post" enctype="multipart/form-data" novalidate>
+        {{ form.hidden_tag() }}
+
+        <div class="form-grid">
+            <div class="mb-3 form-span-2">
+                {{ form.name.label(class="form-label") }}
+                {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else ""), placeholder="e.g. Organic Rice 5kg") }}
+                {% for error in form.name.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+            </div>
+
+            <div class="mb-3">
+                {{ form.barcode.label(class="form-label") }}
+                {{ form.barcode(class="form-control" + (" is-invalid" if form.barcode.errors else ""), placeholder="Scan or enter barcode") }}
+                {% for error in form.barcode.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+            </div>
+
+            <div class="mb-3">
+                {{ form.category.label(class="form-label") }}
+                {{ form.category(class="form-control" + (" is-invalid" if form.category.errors else ""), placeholder="Groceries") }}
+                {% for error in form.category.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+            </div>
+
+            <div class="mb-3">
+                {{ form.quantity.label(class="form-label") }}
+                {{ form.quantity(class="form-control" + (" is-invalid" if form.quantity.errors else ""), min="0") }}
+                {% for error in form.quantity.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+            </div>
+
+            <div class="mb-3">
+                {{ form.low_stock_threshold.label(class="form-label") }}
+                {{ form.low_stock_threshold(class="form-control" + (" is-invalid" if form.low_stock_threshold.errors else ""), min="0") }}
+                {% for error in form.low_stock_threshold.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+            </div>
+
+            <div class="mb-3">
+                {{ form.buying_price.label(class="form-label") }}
+                {{ form.buying_price(class="form-control" + (" is-invalid" if form.buying_price.errors else ""), min="0", step="0.01") }}
+                {% for error in form.buying_price.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+            </div>
+
+            <div class="mb-3">
+                {{ form.selling_price.label(class="form-label") }}
+                {{ form.selling_price(class="form-control" + (" is-invalid" if form.selling_price.errors else ""), min="0", step="0.01") }}
+                {% for error in form.selling_price.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+            </div>
+
+            <div class="mb-3">
+                {{ form.expiry_date.label(class="form-label") }}
+                {{ form.expiry_date(class="form-control" + (" is-invalid" if form.expiry_date.errors else "")) }}
+                {% for error in form.expiry_date.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+            </div>
+
+            <div class="mb-3">
+                {{ form.supplier.label(class="form-label") }}
+                {{ form.supplier(class="form-control" + (" is-invalid" if form.supplier.errors else ""), placeholder="Supplier name") }}
+                {% for error in form.supplier.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+            </div>
+
+            <div class="mb-3 form-span-2">
+                {{ form.image.label(class="form-label") }}
+                {{ form.image(class="form-control" + (" is-invalid" if form.image.errors else "")) }}
+                {% for error in form.image.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+                {% if product is defined and product.image_filename %}
+                    <div class="current-image">
+                        <img src="{{ url_for('static', filename='img/products/' ~ product.image_filename) }}" alt="{{ product.name }}">
+                        <span>Current image</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <a href="{{ url_for('inventory.index') }}" class="btn btn-outline-secondary">Cancel</a>
+            {{ form.submit(class="btn btn-primary") }}
+        </div>
+    </form>
+</section>

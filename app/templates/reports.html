@@ -1,0 +1,283 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<section class="module-toolbar">
+    <div>
+        <p class="eyebrow">Reports</p>
+        <h2>
+            {% if report_type == "sales" %}
+                Sales Report
+            {% elif report_type == "inventory" %}
+                Inventory Report
+            {% else %}
+                Business Reports
+            {% endif %}
+        </h2>
+    </div>
+    <div class="report-actions">
+        <a href="{{ url_for('reports.index') }}" class="btn btn-outline-secondary {% if report_type == 'overview' %}active{% endif %}">
+            <i class="bi bi-grid"></i>
+            <span>Overview</span>
+        </a>
+        <a href="{{ url_for('reports.sales_report') }}" class="btn btn-outline-primary {% if report_type == 'sales' %}active{% endif %}">
+            <i class="bi bi-receipt"></i>
+            <span>Sales</span>
+        </a>
+        <a href="{{ url_for('reports.inventory_report') }}" class="btn btn-outline-primary {% if report_type == 'inventory' %}active{% endif %}">
+            <i class="bi bi-box-seam"></i>
+            <span>Inventory</span>
+        </a>
+    </div>
+</section>
+
+<section class="stats-grid" aria-label="Revenue summary">
+    <article class="stat-card stat-revenue">
+        <div>
+            <span>Total Revenue</span>
+            <strong>₹{{ "%.2f"|format(summary.total_revenue) }}</strong>
+        </div>
+        <i class="bi bi-currency-rupee"></i>
+    </article>
+    <article class="stat-card stat-sales">
+        <div>
+            <span>Total Sales</span>
+            <strong>{{ summary.total_sales }}</strong>
+        </div>
+        <i class="bi bi-cart-check"></i>
+    </article>
+    <article class="stat-card stat-products">
+        <div>
+            <span>Today Revenue</span>
+            <strong>₹{{ "%.2f"|format(summary.today_revenue) }}</strong>
+        </div>
+        <i class="bi bi-calendar-check"></i>
+    </article>
+    <article class="stat-card stat-low">
+        <div>
+            <span>Low Stock Items</span>
+            <strong>{{ low_stock|length }}</strong>
+        </div>
+        <i class="bi bi-exclamation-triangle"></i>
+    </article>
+</section>
+
+<div class="reports-grid">
+    <section class="panel chart-panel">
+        <div class="panel-header">
+            <div>
+                <h3>Monthly Sales Chart</h3>
+                <p>Revenue grouped by month</p>
+            </div>
+            <i class="bi bi-bar-chart-line"></i>
+        </div>
+        <div class="chart-box">
+            <canvas id="monthlySalesChart"
+                    data-labels='{{ monthly_chart["labels"]|tojson }}'
+                    data-values='{{ monthly_chart["values"]|tojson }}'></canvas></canvas>
+        </div>
+    </section>
+
+    <section class="panel">
+        <div class="panel-header">
+            <div>
+                <h3>Top Selling Products</h3>
+                <p>Best performers by units sold</p>
+            </div>
+            <i class="bi bi-trophy"></i>
+        </div>
+        <div class="ai-list">
+            {% if top_products %}
+                {% for product in top_products %}
+                    <div class="ai-list-row">
+                        <div>
+                            <strong>{{ product.name }}</strong>
+                            <span>Revenue: ₹{{ "%.2f"|format(product.revenue) }}</span>
+                        </div>
+                        <span class="stock-badge">{{ product.quantity_sold }}</span>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-bar-chart"></i>
+                    <strong>No sales data</strong>
+                    <span>Top products appear after billing starts.</span>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+</div>
+
+{% if report_type in ["overview", "sales"] %}
+<section class="panel report-table-panel">
+    <div class="panel-header">
+        <div>
+            <h3>Sales Report</h3>
+            <p>Invoice history with revenue and payment details</p>
+        </div>
+        <div class="export-actions">
+            <a href="{{ url_for('reports.sales_report', export='csv') }}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-filetype-csv"></i>
+                <span>CSV</span>
+            </a>
+            <a href="{{ url_for('reports.sales_report', export='excel') }}" class="btn btn-sm btn-outline-success">
+                <i class="bi bi-file-earmark-excel"></i>
+                <span>Excel</span>
+            </a>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table inventory-table align-middle">
+            <thead>
+                <tr>
+                    <th>Invoice</th>
+                    <th>Date</th>
+                    <th>Customer</th>
+                    <th>Items</th>
+                    <th>Payment</th>
+                    <th class="text-end">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if sales %}
+                    {% for sale in sales %}
+                        <tr>
+                            <td><strong>{{ sale.invoice_number }}</strong></td>
+                            <td>{{ sale.created_at.strftime("%d %b %Y") }}</td>
+                            <td>{{ sale.customer_name }}</td>
+                            <td>{{ sale.items|length }}</td>
+                            <td>{{ sale.payment_method }}</td>
+                            <td class="text-end">₹{{ "%.2f"|format(sale.total_amount) }}</td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-table">
+                                <i class="bi bi-receipt"></i>
+                                <span>No sales records yet.</span>
+                            </div>
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endif %}
+
+{% if report_type in ["overview", "inventory"] %}
+<section class="panel report-table-panel">
+    <div class="panel-header">
+        <div>
+            <h3>Inventory Report</h3>
+            <p>Current stock, pricing, profit, and supplier details</p>
+        </div>
+        <div class="export-actions">
+            <a href="{{ url_for('reports.inventory_report', export='csv') }}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-filetype-csv"></i>
+                <span>CSV</span>
+            </a>
+            <a href="{{ url_for('reports.inventory_report', export='excel') }}" class="btn btn-sm btn-outline-success">
+                <i class="bi bi-file-earmark-excel"></i>
+                <span>Excel</span>
+            </a>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table inventory-table align-middle">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Category</th>
+                    <th class="text-end">Qty</th>
+                    <th class="text-end">Buying</th>
+                    <th class="text-end">Selling</th>
+                    <th class="text-end">Profit</th>
+                    <th>Supplier</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if inventory %}
+                    {% for product in inventory %}
+                        <tr>
+                            <td><strong>{{ product.name }}</strong></td>
+                            <td>{{ product.category }}</td>
+                            <td class="text-end">{{ product.quantity }}</td>
+                            <td class="text-end">₹{{ "%.2f"|format(product.buying_price) }}</td>
+                            <td class="text-end">₹{{ "%.2f"|format(product.selling_price) }}</td>
+                            <td class="text-end">₹{{ "%.2f"|format(product.profit) }}</td>
+                            <td>{{ product.supplier or "-" }}</td>
+                            <td>
+                                <span class="stock-status {{ 'danger' if product.quantity <= 0 else 'warning' if product.quantity <= product.low_stock_threshold else 'success' }}">
+                                    {{ product.stock_status }}
+                                </span>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="8">
+                            <div class="empty-table">
+                                <i class="bi bi-box"></i>
+                                <span>No products available.</span>
+                            </div>
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="panel report-table-panel">
+    <div class="panel-header">
+        <div>
+            <h3>Low Stock Report</h3>
+            <p>Products at or below their configured threshold</p>
+        </div>
+        <i class="bi bi-shield-exclamation"></i>
+    </div>
+    <div class="table-responsive">
+        <table class="table inventory-table align-middle">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Category</th>
+                    <th class="text-end">Quantity</th>
+                    <th class="text-end">Threshold</th>
+                    <th>Supplier</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if low_stock %}
+                    {% for product in low_stock %}
+                        <tr>
+                            <td><strong>{{ product.name }}</strong></td>
+                            <td>{{ product.category }}</td>
+                            <td class="text-end">{{ product.quantity }}</td>
+                            <td class="text-end">{{ product.low_stock_threshold }}</td>
+                            <td>{{ product.supplier or "-" }}</td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="5">
+                            <div class="empty-table">
+                                <i class="bi bi-check-circle"></i>
+                                <span>No low-stock products right now.</span>
+                            </div>
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/reports.js') }}"></script>
+{% endblock %}

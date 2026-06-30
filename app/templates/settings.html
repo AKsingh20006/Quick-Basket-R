@@ -1,0 +1,137 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<section class="module-toolbar">
+    <div>
+        <p class="eyebrow">System Configuration</p>
+        <h2>Settings</h2>
+    </div>
+</section>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <section class="panel" style="padding:1.5rem;">
+            <h5 class="mb-3"><i class="bi bi-shop"></i> Store Details</h5>
+            <form method="post" action="{{ url_for('settings.update_store') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-3">
+                    <label class="form-label">Store Name</label>
+                    <input type="text" name="store_name" class="form-control" value="{{ settings.store_name }}" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Owner Name</label>
+                    <input type="text" name="owner_name" class="form-control" value="{{ settings.owner_name or '' }}">
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Phone</label>
+                        <input type="text" name="phone" class="form-control" value="{{ settings.phone or '' }}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control" value="{{ settings.email or '' }}">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Currency</label>
+                        <select name="currency" class="form-select">
+                            <option value="INR" {% if settings.currency == "INR" %}selected{% endif %}>INR (₹)</option>
+                            <option value="USD" {% if settings.currency == "USD" %}selected{% endif %}>USD ($)</option>
+                            <option value="EUR" {% if settings.currency == "EUR" %}selected{% endif %}>EUR (€)</option>
+                            <option value="GBP" {% if settings.currency == "GBP" %}selected{% endif %}>GBP (£)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Theme</label>
+                        <select name="theme" class="form-select">
+                            <option value="light" {% if settings.theme == "light" %}selected{% endif %}>Light</option>
+                            <option value="dark" {% if settings.theme == "dark" %}selected{% endif %}>Dark</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-lg"></i>
+                    <span>Save Store Settings</span>
+                </button>
+            </form>
+        </section>
+
+        <section class="panel mt-4" style="padding:1.5rem;">
+            <h5 class="mb-3"><i class="bi bi-shield-lock"></i> Change Password</h5>
+            <form method="post" action="{{ url_for('settings.update_password') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-3">
+                    <label class="form-label">Current Password</label>
+                    <input type="password" name="current_password" class="form-control" required>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">New Password</label>
+                        <input type="password" name="new_password" class="form-control" minlength="8" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Confirm Password</label>
+                        <input type="password" name="confirm_password" class="form-control" minlength="8" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-outline-primary">
+                    <i class="bi bi-key"></i>
+                    <span>Update Password</span>
+                </button>
+            </form>
+        </section>
+    </div>
+
+    <div class="col-lg-6">
+        <section class="panel" style="padding:1.5rem;">
+            <h5 class="mb-3"><i class="bi bi-database"></i> Database Backup &amp; Restore</h5>
+            <p class="text-muted">Download a snapshot of your live database, or restore from a previous backup file.</p>
+            <form method="post" action="{{ url_for('settings.backup') }}" class="mb-3">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-outline-secondary">
+                    <i class="bi bi-download"></i>
+                    <span>Backup Database</span>
+                </button>
+            </form>
+            <form method="post" action="{{ url_for('settings.restore') }}" enctype="multipart/form-data" onsubmit="return confirm('Restoring will overwrite the current database. Continue?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-3">
+                    <input type="file" name="backup_file" class="form-control" accept=".db" required>
+                </div>
+                <button type="submit" class="btn btn-outline-danger">
+                    <i class="bi bi-upload"></i>
+                    <span>Restore Database</span>
+                </button>
+            </form>
+        </section>
+
+        <section class="panel mt-4" style="padding:1.5rem;">
+            <h5 class="mb-3"><i class="bi bi-file-earmark-excel"></i> Export to Excel</h5>
+            <p class="text-muted">Download the latest product catalog and sales history as Excel workbooks.</p>
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="{{ url_for('settings.export_products') }}" class="btn btn-outline-success">
+                    <i class="bi bi-box-seam"></i>
+                    <span>Export Products</span>
+                </a>
+                <a href="{{ url_for('settings.export_sales') }}" class="btn btn-outline-success">
+                    <i class="bi bi-receipt"></i>
+                    <span>Export Sales</span>
+                </a>
+            </div>
+        </section>
+
+        <section class="panel mt-4" style="padding:1.5rem;">
+            <h5 class="mb-3"><i class="bi bi-box-arrow-left"></i> Session</h5>
+            <p class="text-muted">Signed in as <strong>{{ current_user.name }}</strong> ({{ current_user.email }}).</p>
+            <form method="post" action="{{ url_for('auth.logout') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-outline-dark">
+                    <i class="bi bi-box-arrow-left"></i>
+                    <span>Logout</span>
+                </button>
+            </form>
+        </section>
+    </div>
+</div>
+{% endblock %}

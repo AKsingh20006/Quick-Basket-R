@@ -1,0 +1,204 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<section class="module-toolbar">
+    <div>
+        <p class="eyebrow">AI Insights</p>
+        <h2>Demand Forecast &amp; Sales Prediction</h2>
+    </div>
+    <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-primary">
+        <i class="bi bi-speedometer2"></i>
+        <span>Dashboard</span>
+    </a>
+</section>
+
+<section class="ai-metric-grid">
+    <article class="stat-card stat-revenue">
+        <div>
+            <span>Predicted 7-Day Revenue</span>
+            <strong>₹{{ "%.2f"|format(report.sales_prediction.next_7_days_total) }}</strong>
+        </div>
+        <i class="bi bi-magic"></i>
+    </article>
+    <article class="stat-card stat-sales">
+        <div>
+            <span>Total Sales</span>
+            <strong>{{ report.business.sale_count }}</strong>
+        </div>
+        <i class="bi bi-receipt"></i>
+    </article>
+    <article class="stat-card stat-products">
+        <div>
+            <span>Products Tracked</span>
+            <strong>{{ report.business.product_count }}</strong>
+        </div>
+        <i class="bi bi-box-seam"></i>
+    </article>
+    <article class="stat-card stat-low">
+        <div>
+            <span>Predicted Stock Risks</span>
+            <strong>{{ report.low_stock_prediction|length }}</strong>
+        </div>
+        <i class="bi bi-exclamation-triangle"></i>
+    </article>
+</section>
+
+<div class="ai-grid">
+    <section class="panel ai-chart-panel">
+        <div class="panel-header">
+            <div>
+                <h3>Sales Prediction</h3>
+                <p>{{ report.sales_prediction.confidence }}</p>
+            </div>
+            <i class="bi bi-graph-up-arrow"></i>
+        </div>
+        <img src="data:image/png;base64,{{ report.sales_prediction.chart }}" alt="Sales prediction chart" class="ai-chart-img">
+    </section>
+
+    <section class="panel ai-insight-panel">
+        <div class="panel-header">
+            <div>
+                <h3>Business Insights</h3>
+                <p>Operational recommendations from current data</p>
+            </div>
+            <i class="bi bi-lightbulb"></i>
+        </div>
+        <div class="insight-list">
+            {% for insight in report.business.insights %}
+                <div class="insight-item">
+                    <i class="bi bi-check2-circle"></i>
+                    <span>{{ insight }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+
+<div class="ai-grid">
+    <section class="panel">
+        <div class="panel-header">
+            <div>
+                <h3>Top Selling Products</h3>
+                <p>Ranked by units sold</p>
+            </div>
+            <i class="bi bi-trophy"></i>
+        </div>
+        {% if report.top_selling.chart %}
+            <img src="data:image/png;base64,{{ report.top_selling.chart }}" alt="Top selling products chart" class="ai-chart-img">
+        {% endif %}
+        <div class="ai-list">
+            {% if report.top_selling.products %}
+                {% for product in report.top_selling.products %}
+                    <div class="ai-list-row">
+                        <div>
+                            <strong>{{ product.name }}</strong>
+                            <span>Revenue: ₹{{ "%.2f"|format(product.revenue) }}</span>
+                        </div>
+                        <span class="stock-badge">{{ product.sold }}</span>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-bar-chart"></i>
+                    <strong>No sales history yet</strong>
+                    <span>Top selling products will appear after billing starts.</span>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="panel">
+        <div class="panel-header">
+            <div>
+                <h3>Demand Forecast</h3>
+                <p>Estimated product demand from sales velocity</p>
+            </div>
+            <i class="bi bi-calendar2-week"></i>
+        </div>
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th class="text-end">Daily</th>
+                        <th class="text-end">7 Days</th>
+                        <th class="text-end">30 Days</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if report.demand_forecast %}
+                        {% for item in report.demand_forecast %}
+                            <tr>
+                                <td>{{ item.name }}</td>
+                                <td class="text-end">{{ item.avg_daily_demand }}</td>
+                                <td class="text-end">{{ item.next_7_days }}</td>
+                                <td class="text-end">{{ item.next_30_days }}</td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="4">
+                                <div class="empty-table">
+                                    <i class="bi bi-clipboard-data"></i>
+                                    <span>Demand forecast needs completed sales.</span>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+<section class="panel">
+    <div class="panel-header">
+        <div>
+            <h3>Low Stock Prediction</h3>
+            <p>Risk-ranked items based on stock levels and recent demand</p>
+        </div>
+        <i class="bi bi-shield-exclamation"></i>
+    </div>
+    <div class="table-responsive">
+        <table class="table inventory-table align-middle">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th class="text-end">Stock</th>
+                    <th class="text-end">Threshold</th>
+                    <th class="text-end">Avg Daily Sales</th>
+                    <th class="text-end">Days Left</th>
+                    <th class="text-end">Risk</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if report.low_stock_prediction %}
+                    {% for item in report.low_stock_prediction %}
+                        <tr>
+                            <td><strong>{{ item.name }}</strong></td>
+                            <td class="text-end">{{ item.quantity }}</td>
+                            <td class="text-end">{{ item.threshold }}</td>
+                            <td class="text-end">{{ item.avg_daily_sales }}</td>
+                            <td class="text-end">{{ item.days_left if item.days_left is not none else "No sales trend" }}</td>
+                            <td class="text-end">
+                                <span class="risk-pill {{ 'high' if item.label == 'High' else 'medium' if item.label == 'Medium' else '' }}">
+                                    {{ item.label }}
+                                </span>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-table">
+                                <i class="bi bi-check-circle"></i>
+                                <span>No stock risks detected.</span>
+                            </div>
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

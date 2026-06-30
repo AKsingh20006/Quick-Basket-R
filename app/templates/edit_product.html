@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<section class="module-toolbar">
+    <div>
+        <p class="eyebrow">Inventory Management</p>
+        <h2>Edit Product</h2>
+    </div>
+    <a href="{{ url_for('inventory.index') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i>
+        <span>Back</span>
+    </a>
+</section>
+
+{% include "product_form.html" %}
+{% endblock %}
