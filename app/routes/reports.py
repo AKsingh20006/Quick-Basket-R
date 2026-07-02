@@ -38,14 +38,15 @@ def _revenue_summary():
 def _monthly_sales_chart():
     rows = (
         db.session.query(
-            func.strftime("%Y-%m", Sale.created_at).label("month"),
+            func.to_char(Sale.created_at, "YYYY-MM").label("month"),
             func.coalesce(func.sum(Sale.total_amount), 0).label("revenue"),
         )
-        .group_by("month")
-        .order_by("month")
+        .group_by(func.to_char(Sale.created_at, "YYYY-MM"))
+        .order_by(func.to_char(Sale.created_at, "YYYY-MM"))
         .limit(12)
         .all()
     )
+
     return {
         "labels": [row.month for row in rows],
         "values": [_money(row.revenue) for row in rows],
