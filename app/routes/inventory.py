@@ -12,6 +12,7 @@ from flask import (
 )
 from flask_login import login_required
 from sqlalchemy import or_
+from sqlalchemy.exc import IntegrityError
 from werkzeug.utils import secure_filename
 
 from app.extensions import db
@@ -152,9 +153,29 @@ def edit_product(product_id):
 @login_required
 def delete_product(product_id):
     product = Product.query.get_or_404(product_id)
-    db.session.delete(product)
-    db.session.commit()
-    _sync_products()
 
-    flash("Product deleted successfully.", "info")
+    try:
+        db.session.delete(product)
+        db.session.commit()
+
+        _sync_products()
+
+        flash("Product deleted successfully.", "success")
+
+    except IntegrityError:
+        db.session.rollback()
+
+        flash(
+            "This product cannot be deleted because it has already been used in previous sales.",
+            "warning"
+        )
+
+    except Exception as e:
+        db.session.rollback()
+
+        flash(
+            f"An unexpected error occurred: {str(e)}",
+            "danger"
+        )
+
     return redirect(url_for("inventory.index"))
